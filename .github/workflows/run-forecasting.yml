@@ -55,19 +55,19 @@ jobs:
       # 1) Script #1
       - name: Run token price snapshot
         run: |
-          python 88ce9d23-14a1-4998-858f-a845f0090578.py
+          python Price_history_test.py
         timeout-minutes: 30
 
       # 2) Script #2
       - name: Run volume enrichment
         run: |
-          python 1e04fec1-2c5d-430f-a5fe-c39927731c70.py
+          python Test.py
         timeout-minutes: 30
 
       # 3) Script #3 (can take a while)
       - name: Run forecasting bot
         run: |
-          python 32d66341-8fca-4920-83a1-7129b7dd8ceb.py
+          python My_custom_bot_manyllms2.py
         timeout-minutes: 360
 
       # Save outputs as downloadable artifacts
