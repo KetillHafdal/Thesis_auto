@@ -1,0 +1,7 @@
+pandas
+httpx
+tiktoken
+python-dotenv
+requests
+tqdm
+asknews
