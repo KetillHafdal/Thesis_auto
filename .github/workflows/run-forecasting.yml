@@ -3,7 +3,7 @@ name: Run Forecasting Pipeline (Daily)
 on:
   schedule:
     # Iceland uses UTC year-round — runs every day at 08:00 UTC
-    - cron: '0 8 * * *'
+    - cron: '0 19 * * *'
   workflow_dispatch: {}   # allows manual runs
 
 jobs:
