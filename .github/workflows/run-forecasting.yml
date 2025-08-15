@@ -1,0 +1,80 @@
+name: Run Forecasting Pipeline (Daily)
+
+on:
+  schedule:
+    # Iceland uses UTC year-round. Adjust this if you want a different time.
+    - cron: '0 15 * * *'  # every day at 08:00 UTC
+  workflow_dispatch: {}   # manual run button
+
+jobs:
+  run-pipeline:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+    env:
+      # Make repo root importable (if you have local packages)
+      PYTHONPATH: ${{ github.workspace }}
+      # Expose secrets as environment variables
+      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      ASKNEWS_API_KEY: ${{ secrets.ASKNEWS_API_KEY }}
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # Create a .env ON THE RUNNER (not in your repo) for code that reads .env
+      - name: Create .env from GitHub Secrets (safe)
+        run: |
+          cat > .env << 'EOF'
+          OPENROUTER_API_KEY=${{ secrets.OPENROUTER_API_KEY }}
+          ASKNEWS_API_KEY=${{ secrets.ASKNEWS_API_KEY }}
+          EOF
+
+      # 1) Script #1
+      - name: Run token price snapshot
+        run: |
+          python 88ce9d23-14a1-4998-858f-a845f0090578.py
+        timeout-minutes: 30
+
+      # 2) Script #2
+      - name: Run volume enrichment
+        run: |
+          python 1e04fec1-2c5d-430f-a5fe-c39927731c70.py
+        timeout-minutes: 30
+
+      # 3) Script #3 (longer)
+      - name: Run forecasting bot
+        run: |
+          python 32d66341-8fca-4920-83a1-7129b7dd8ceb.py
+        timeout-minutes: 360
+
+      # Collect outputs as artifacts (downloadable)
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: forecasting-outputs-${{ github.run_id }}
+          path: |
+            token_prices_snapshot*.json
+            open_markets_wip_with_volume_*.json
+            forecast_results_*.xlsx
+          if-no-files-found: warn
