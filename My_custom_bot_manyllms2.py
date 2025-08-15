@@ -13,7 +13,6 @@ import sys
 import tiktoken
 import pandas as pd
 from forecasting_tools import AskNewsSearcher
-from asknews_client import AskNewsClient
 
 load_dotenv()
 
@@ -451,3 +450,4 @@ if __name__ == "__main__":
 
     asyncio.run(MyCustomForecastBot(models_to_test, use_summarizer).run())
 '''
+
