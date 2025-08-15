@@ -2,9 +2,9 @@ name: Run Forecasting Pipeline (Daily)
 
 on:
   schedule:
-    # Iceland uses UTC year-round. Adjust this if you want a different time.
-    - cron: '0 15 * * *'  # every day at 08:00 UTC
-  workflow_dispatch: {}   # manual run button
+    # Iceland uses UTC year-round — runs every day at 08:00 UTC
+    - cron: '0 8 * * *'
+  workflow_dispatch: {}   # allows manual runs
 
 jobs:
   run-pipeline:
@@ -18,7 +18,8 @@ jobs:
       PYTHONPATH: ${{ github.workspace }}
       # Expose secrets as environment variables
       OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-      ASKNEWS_API_KEY: ${{ secrets.ASKNEWS_API_KEY }}
+      ASKNEWS_CLIENT_ID: ${{ secrets.ASKNEWS_CLIENT_ID }}
+      ASKNEWS_SECRET: ${{ secrets.ASKNEWS_SECRET }}
 
     steps:
       - name: Checkout repo
@@ -42,12 +43,13 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # Create a .env ON THE RUNNER (not in your repo) for code that reads .env
+      # Create a .env on the runner so code that expects it can still work
       - name: Create .env from GitHub Secrets (safe)
         run: |
           cat > .env << 'EOF'
           OPENROUTER_API_KEY=${{ secrets.OPENROUTER_API_KEY }}
-          ASKNEWS_API_KEY=${{ secrets.ASKNEWS_API_KEY }}
+          ASKNEWS_CLIENT_ID=${{ secrets.ASKNEWS_CLIENT_ID }}
+          ASKNEWS_SECRET=${{ secrets.ASKNEWS_SECRET }}
           EOF
 
       # 1) Script #1
@@ -62,13 +64,13 @@ jobs:
           python 1e04fec1-2c5d-430f-a5fe-c39927731c70.py
         timeout-minutes: 30
 
-      # 3) Script #3 (longer)
+      # 3) Script #3 (can take a while)
       - name: Run forecasting bot
         run: |
           python 32d66341-8fca-4920-83a1-7129b7dd8ceb.py
         timeout-minutes: 360
 
-      # Collect outputs as artifacts (downloadable)
+      # Save outputs as downloadable artifacts
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
