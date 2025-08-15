@@ -4,4 +4,5 @@ tiktoken
 python-dotenv
 requests
 tqdm
+forecasting-tools
 asknews
